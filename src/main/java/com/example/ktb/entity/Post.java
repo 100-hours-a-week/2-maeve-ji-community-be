@@ -1,16 +1,13 @@
-package com.example.ktb.domain;
+package com.example.ktb.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Posts")
-@Getter
+@Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {
     @Id
@@ -35,19 +32,19 @@ public class Post {
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
-
-    @Column(name = "img_url", length = 255)
+    @Lob
+    @Column(name = "img_url")
     private String imgUrl;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
-    @Builder
-    public Post(User user, String title, String content, String imgUrl) {
-        this.user = user;
-        this.title = title;
-        this.content = content;
-        this.imgUrl = imgUrl;
-        this.createdAt = LocalDateTime.now();  // 글 생성 시 자동 입력
-    }
+    @Column(name = "post_view")
+    private int postView = 0;
+
+    @Column(name = "post_like")
+    private int postLike = 0;
+
+    @Column(name = "post_comment")
+    private int postComment = 0;
 }

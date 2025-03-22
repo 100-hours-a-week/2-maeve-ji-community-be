@@ -1,15 +1,14 @@
-package com.example.ktb.domain;
+package com.example.ktb.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+@Builder
 @Entity // JPA에서 관리하는 Entity
 @Table(name = "Users")
-@Getter
+@Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)  // 외부에서 막 생성하지 못하게
+@AllArgsConstructor
 public class User {
     @Id // PK
     @Column(name = "user_id", nullable = false)
@@ -29,22 +28,11 @@ public class User {
     private String nickname;
 
     // 회원 프로필사진
+    @Lob
     @Column(name = "img_url", nullable = false)
     private String imgUrl;
 
     // 회원삭제
     @Column(name = "is_deleted")
-    private boolean isDeleted = false;  // 기본 false로 초기화
-
-    @Builder
-    public User(String email, String password, String nickname, String imgUrl) {
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.imgUrl = imgUrl;
-    }
-
-    public void delete() {
-        this.isDeleted = true;
-    }
+    private Boolean deleted = false;  // 기본 false로 초기화
 }

@@ -1,16 +1,13 @@
-package com.example.ktb.domain;
+package com.example.ktb.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Comments")
-@Getter
+@Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)  // 외부에서 막 생성하지 못하게
 public class Comment {
     @Id
@@ -38,22 +35,4 @@ public class Comment {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
-    @Builder
-    public Comment(Post post, User user, String comment) {
-        this.post = post;
-        this.user = user;
-        this.comment = comment;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    // 댓글 수정 메서드
-    public void update(String comment) {
-        this.comment = comment;
-        this.modifiedAt = LocalDateTime.now();
-    }
-
-    // 소프트 삭제
-    public void delete() {
-        this.isDeleted = true;
-    }
 }
