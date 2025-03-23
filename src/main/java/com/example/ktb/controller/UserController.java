@@ -6,6 +6,8 @@ import com.example.ktb.dto.response.GetUserProfileResponseDto;
 import com.example.ktb.dto.response.LoginResponseDto;
 import com.example.ktb.service.AuthService;
 import com.example.ktb.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,19 +56,61 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse("user_profile_success", userService.getUserProfile(userId)));
     }
 
-    // 회원 정보 수정
+//    // 회원 정보 수정
+//    @PatchMapping("/users/{userId}")
+//    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
+//        userService.updateUser(userId, userDto);
+//        return ResponseEntity.noContent().build();
+//    }
+
+    // 회원정보 수정
     @PatchMapping("/users/{userId}")
-    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
+    public ResponseEntity<?> updateUser(@PathVariable Long userId,
+                                        @RequestBody UserDto userDto,
+                                        HttpServletRequest request) {
+        Long authenticatedUserId = Long.parseLong((String) request.getAttribute("userId"));
+        if (!authenticatedUserId.equals(userId)) {
+            return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN).build();
+        }
         userService.updateUser(userId, userDto);
         return ResponseEntity.noContent().build();
     }
 
+
+    // 비밀번호 수정
+//    @PatchMapping("/users/{userId}/password")
+//    public ResponseEntity<?> updatePassword(@PathVariable Long userId, @RequestBody UserDto userDto) {
+//        userService.updatePassword(userId, userDto.getPassword());
+//        return ResponseEntity.noContent().build();
+//    }
+
     // 비밀번호 수정
     @PatchMapping("/users/{userId}/password")
-    public ResponseEntity<?> updatePassword(@PathVariable Long userId, @RequestBody UserDto userDto) {
-        userService.updatePassword(userId, userDto.getPassword());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> updatePassword(@PathVariable Long userId,
+                                            @RequestBody UserDto userDto,
+                                            HttpServletRequest request) {
+        // 🔥 JWT에서 인증된 userId 꺼내기
+        Long authenticatedUserId = Long.parseLong((String) request.getAttribute("userId"));
+
+        // 🔥 본인 인증 체크
+        if (!authenticatedUserId.equals(userId)) {
+            return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN)
+                    .body(Map.of("message", "user_forbidden", "data", null));
+        }
+
+        try {
+            userService.updatePassword(userId, userDto.getPassword());
+            return ResponseEntity.noContent().build(); // 204 성공
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "user_not_found", "data", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "internal_server_error", "data", null));
+        }
     }
+
+
 
     // 회원 탈퇴
     @DeleteMapping("/users/{userId}")
