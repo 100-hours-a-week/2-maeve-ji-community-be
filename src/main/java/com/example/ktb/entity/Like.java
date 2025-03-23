@@ -5,8 +5,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "Likes")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Like {
     @Id
     @Column(name = "like_id")

@@ -15,6 +15,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 삭제되지 않은 post 가져오기
     Optional<Post> findByPostIdAndIsDeletedFalse(Long postId);
 
+    // 삭제되지 않은 게시물 전체 조회
+    List<Post> findAllByIsDeletedFalseOrderByCreatedAtDesc();
+
+
     /**
      * 게시글 조회수 증가 (UPDATE 쿼리를 직접 호출)
      */

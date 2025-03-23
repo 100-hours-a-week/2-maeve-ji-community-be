@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,6 +18,22 @@ import java.util.Map;
 public class PostController {
     private final PostService postService;
     private final UserService userService;
+
+    // 게시물 전체 조회
+    @GetMapping("/posts")
+    public ResponseEntity<?> getAllPosts(HttpServletRequest request) {
+        try {
+            List<Map<String, Object>> posts = postService.getAllPosts();
+            return ResponseEntity.ok(Map.of(
+                    "message", "posts_all_get_success",
+                    "data", Map.of("posts", posts)
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "post_bad_request", "data", null));
+        }
+    }
+
 
     // 게시물 등록
     @PostMapping("/posts")
@@ -101,42 +118,42 @@ public class PostController {
                     .body(Map.of("message", "post_bad_request", "data", null));
         }
     }
-
-    // 게시물 좋아요
-    @PostMapping("/posts/{postId}/likes")
-    public ResponseEntity<?> likePost(@PathVariable Long postId, HttpServletRequest request) {
-        try {
-            Long userId = Long.parseLong((String) request.getAttribute("userId"));  // JWT에서 추출
-            postService.likePost(postId, userId);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "like_success", "data", Map.of("postId", postId)));
-        } catch (IllegalArgumentException e) {
-            String message = e.getMessage().equals("삭제된 게시글입니다.") ? "deleted_post" : "post_not_found";
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "post_not_found", "data", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "like_bad_request", "data", null));
-        }
-    }
-
-
-    // 게시물 좋아요 삭제
-    @DeleteMapping("/posts/{postId}/likes")
-    public ResponseEntity<?> unlikePost(@PathVariable Long postId, HttpServletRequest request) {
-        try {
-            // 보통 JWT에서 userId 추출해서 좋아요 누른 사람인지 검증도 가능
-            Long userId = Long.parseLong((String) request.getAttribute("userId")); // JWT에서 추출
-            postService.unlikePost(postId, userId);
-            return ResponseEntity.noContent().build(); // 204 성공
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "like_not_found", "data", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "like_bad_request", "data", null));
-        }
-    }
-
+//
+//    // 게시물 좋아요
+//    @PostMapping("/posts/{postId}/likes")
+//    public ResponseEntity<?> likePost(@PathVariable Long postId, HttpServletRequest request) {
+//        try {
+//            Long userId = Long.parseLong((String) request.getAttribute("userId"));  // JWT에서 추출
+//            postService.likePost(postId, userId);
+//            return ResponseEntity.status(HttpStatus.CREATED)
+//                    .body(Map.of("message", "like_success", "data", Map.of("postId", postId)));
+//        } catch (IllegalArgumentException e) {
+//            String message = e.getMessage().equals("삭제된 게시글입니다.") ? "deleted_post" : "post_not_found";
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(Map.of("message", "post_not_found", "data", null));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(Map.of("message", "like_bad_request", "data", null));
+//        }
+//    }
+//
+//
+//    // 게시물 좋아요 삭제
+//    @DeleteMapping("/posts/{postId}/likes")
+//    public ResponseEntity<?> unlikePost(@PathVariable Long postId, HttpServletRequest request) {
+//        try {
+//            // 보통 JWT에서 userId 추출해서 좋아요 누른 사람인지 검증도 가능
+//            Long userId = Long.parseLong((String) request.getAttribute("userId")); // JWT에서 추출
+//            postService.unlikePost(postId, userId);
+//            return ResponseEntity.noContent().build(); // 204 성공
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(Map.of("message", "like_not_found", "data", null));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(Map.of("message", "like_bad_request", "data", null));
+//        }
+//    }
+//
 
 }

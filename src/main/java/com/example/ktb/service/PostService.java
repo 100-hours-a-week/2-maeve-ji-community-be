@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -22,6 +23,34 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+
+    // 게시물 전체 조회
+    @Transactional
+    public List<Map<String, Object>> getAllPosts() {
+        List<Post> postList = postRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc();
+
+        List<Map<String, Object>> posts = new ArrayList<>();
+        for (Post post : postList) {
+            Map<String, Object> author = Map.of(
+                    "user_id", post.getUser().getUserId(),
+                    "nickname", post.getUser().getNickname(),
+                    "img_url", post.getUser().getImgUrl()
+            );
+
+            Map<String, Object> postData = new LinkedHashMap<>();
+            postData.put("post_id", post.getPostId());
+            postData.put("title", post.getTitle());
+            postData.put("author", author);
+            postData.put("created_at", post.getCreatedAt().toString());
+            postData.put("countRecommend", post.getPostLike());
+            postData.put("countComment", post.getPostComment());
+            postData.put("countView", post.getPostView());
+
+            posts.add(postData);
+        }
+
+        return posts;
+    }
 
     // 게시글 등록
     @Transactional
