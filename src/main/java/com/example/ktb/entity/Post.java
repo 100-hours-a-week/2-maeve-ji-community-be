@@ -2,13 +2,17 @@ package com.example.ktb.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Posts")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Post {
     @Id
     @Column(name = "post_id")
@@ -36,7 +40,7 @@ public class Post {
     @Column(name = "img_url")
     private String imgUrl;
 
-    @Column(name = "is_deleted")
+    @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
     @Column(name = "post_view")

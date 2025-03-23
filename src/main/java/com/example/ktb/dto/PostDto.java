@@ -1,6 +1,7 @@
 package com.example.ktb.dto;
 
 import com.example.ktb.entity.Post;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class PostDto {
     private Long user;
     private String title;
     private String content;
+    @JsonProperty("img_url")
     private String imgUrl;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
