@@ -118,4 +118,33 @@ public class PostService {
         post.setModifiedAt(LocalDateTime.now());    // 수정되었다고 해야하는지... (삭제된 시간이니까 해두면 좋지않을가)
     }
 
+    @Transactional
+    public void likePost(Long postId, Long userId) {
+        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+                .orElseThrow(() -> new IllegalArgumentException("post_not_found"));
+        if (post.getIsDeleted()) {
+            log.warn("삭제된 게시글입니다. postId: {}", postId);
+            throw new IllegalArgumentException("삭제된 게시글입니다.");
+        }
+        postRepository.increasePostLike(postId);
+        log.info("✅ postId {} 좋아요 증가 완료", postId);
+
+        // 좋아요 수 확인용 출력
+        Post updatedPost = postRepository.findById(postId).orElseThrow();
+        log.info("현재 postId {} 의 좋아요 수: {}", postId, updatedPost.getPostLike());
+    }
+
+    @Transactional
+    public void unlikePost(Long postId, Long userId) {
+        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+                .orElseThrow(() -> new IllegalArgumentException("post_not_found"));
+
+        postRepository.decreasePostLike(postId);
+        log.info("✅ postId {} 좋아요 감소 완료", postId);
+
+        // 좋아요 수 확인용 출력
+        Post updatedPost = postRepository.findById(postId).orElseThrow();
+        log.info("현재 postId {} 의 좋아요 수: {}", postId, updatedPost.getPostLike());
+    }
+
 }

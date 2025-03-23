@@ -61,11 +61,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -97,8 +100,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = claims.getSubject();  // 보통 userId 저장해둠
 
                 // Spring Security 인증 객체 생성
+//                UsernamePasswordAuthenticationToken authentication =
+//                        new UsernamePasswordAuthenticationToken(userId, null, null);
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userId, null, null);
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
                 // SecurityContext에 인증 객체 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
