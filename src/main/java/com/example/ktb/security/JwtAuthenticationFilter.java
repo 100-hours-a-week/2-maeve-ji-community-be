@@ -84,7 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            // 🔥 블랙리스트(로그아웃) 토큰 체크
+            // 블랙리스트(로그아웃) 토큰 체크
             String isLogout = redisTemplate.opsForValue().get(token);
             if (isLogout != null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -92,15 +92,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             try {
-                // 🔥 토큰 유효성 검사 및 Claims 추출
+                // 토큰 유효성 검사 및 Claims 추출
                 Claims claims = jwtTokenProvider.getClaims(token);
                 String userId = claims.getSubject();  // 보통 userId 저장해둠
 
-                // 🔥 Spring Security 인증 객체 생성
+                // Spring Security 인증 객체 생성
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userId, null, null);
 
-                // 🔥 SecurityContext에 인증 객체 저장
+                // SecurityContext에 인증 객체 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 // (Optional) 컨트롤러에서 꺼내 쓰고 싶을 때

@@ -9,10 +9,14 @@ import com.example.ktb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -56,13 +60,6 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse("user_profile_success", userService.getUserProfile(userId)));
     }
 
-//    // 회원 정보 수정
-//    @PatchMapping("/users/{userId}")
-//    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
-//        userService.updateUser(userId, userDto);
-//        return ResponseEntity.noContent().build();
-//    }
-
     // 회원정보 수정
     @PatchMapping("/users/{userId}")
     public ResponseEntity<?> updateUser(@PathVariable Long userId,
@@ -76,23 +73,15 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-
-    // 비밀번호 수정
-//    @PatchMapping("/users/{userId}/password")
-//    public ResponseEntity<?> updatePassword(@PathVariable Long userId, @RequestBody UserDto userDto) {
-//        userService.updatePassword(userId, userDto.getPassword());
-//        return ResponseEntity.noContent().build();
-//    }
-
     // 비밀번호 수정
     @PatchMapping("/users/{userId}/password")
     public ResponseEntity<?> updatePassword(@PathVariable Long userId,
                                             @RequestBody UserDto userDto,
                                             HttpServletRequest request) {
-        // 🔥 JWT에서 인증된 userId 꺼내기
+        // JWT에서 인증된 userId 꺼내기
         Long authenticatedUserId = Long.parseLong((String) request.getAttribute("userId"));
 
-        // 🔥 본인 인증 체크
+        // 본인 맞는지 확인
         if (!authenticatedUserId.equals(userId)) {
             return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN)
                     .body(Map.of("message", "user_forbidden", "data", null));
@@ -110,12 +99,45 @@ public class UserController {
         }
     }
 
-
-
     // 회원 탈퇴
     @DeleteMapping("/users/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok(new ApiResponse("user_delete_success", "/auth/login"));
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId,
+                                        HttpServletRequest request) {
+        Long authenticatedUserId = Long.parseLong((String) request.getAttribute("userId"));
+        System.out.println(">>>> deleteUser userId: " + userId);
+
+        if (!authenticatedUserId.equals(userId)) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("message", "user_forbidden");
+            body.put("data", null);
+            return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN).body(body);
+        }
+
+        try {
+            boolean deleted = userService.deleteUser(userId);
+            if (!deleted) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("message", "user_already_deleted");
+                body.put("data", null);
+                return ResponseEntity.status(400).body(body);
+            }
+
+            Map<String, Object> successBody = new LinkedHashMap<>();
+            successBody.put("message", "user_delete_success");
+            successBody.put("data", Map.of("redirectURL", "/auth/login"));
+
+            return ResponseEntity.ok(successBody); // 200 성공
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("message", "user_not_found");
+            body.put("data", null);
+            return ResponseEntity.status(404).body(body);
+        } catch (Exception e) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("message", "internal_server_error");
+            body.put("data", null);
+            return ResponseEntity.status(500).body(body);
+        }
     }
+
 }

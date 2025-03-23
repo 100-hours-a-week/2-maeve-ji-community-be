@@ -32,7 +32,8 @@ public class User {
     @Column(name = "img_url", nullable = false)
     private String imgUrl;
 
-    // 회원삭제
-    @Column(name = "is_deleted")
-    private Boolean deleted = false;  // 기본 false로 초기화
+    // 삭제 여부
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean deleted = false;
+
 }

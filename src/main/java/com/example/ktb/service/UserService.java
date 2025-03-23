@@ -31,6 +31,7 @@ public class UserService {
                 .password(userDto.getPassword()) // TO-DO: 암호화
                 .nickname(userDto.getNickname())
                 .imgUrl(userDto.getImgUrl())
+                .deleted(false)
                 .build();
 
         return UserDto.fromEntity(userRepository.save(user));
@@ -98,9 +99,43 @@ public class UserService {
 
     // 회원 탈퇴
     @Transactional
-    public void deleteUser(Long userId) {
+    public boolean deleteUser(Long userId) {
+        System.out.println(">>>> deleteUser userId: " + userId);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("user_not_found"));
+
+        if (Boolean.TRUE.equals(user.getDeleted())) {
+            System.out.println(">>>> 이미 삭제된 유저");
+            return false;
+        }
+
         user.setDeleted(true);
+        System.out.println(">>>> 삭제 처리 완료");
+        return true;
     }
 }
+
+/*
+*     public ResponseEntity<?> updatePassword(@PathVariable Long userId,
+                                            @RequestBody UserDto userDto,
+                                            HttpServletRequest request) {
+        // JWT에서 인증된 userId 꺼내기
+        Long authenticatedUserId = Long.parseLong((String) request.getAttribute("userId"));
+
+        // 본인 맞는지 확인
+        if (!authenticatedUserId.equals(userId)) {
+            return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN)
+                    .body(Map.of("message", "user_forbidden", "data", null));
+        }
+
+        try {
+            userService.updatePassword(userId, userDto.getPassword());
+            return ResponseEntity.noContent().build(); // 204 성공
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "user_not_found", "data", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "internal_server_error", "data", null));
+        }
+* */
