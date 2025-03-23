@@ -1,6 +1,7 @@
 package com.example.ktb.service;
 
 import com.example.ktb.dto.UserDto;
+import com.example.ktb.dto.response.GetUserProfileResponseDto;
 import com.example.ktb.entity.User;
 import com.example.ktb.repository.UserRepository;
 import com.example.ktb.security.JwtTokenProvider;
@@ -58,10 +59,16 @@ public class UserService {
 
 
     // 회원Id -> 회원 객체
-    public UserDto getUserProfile(Long userId) {
+    public GetUserProfileResponseDto getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        return UserDto.fromEntity(user);
+        return GetUserProfileResponseDto.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .imgUrl(user.getImgUrl())
+                .build();
+
     }
 
 

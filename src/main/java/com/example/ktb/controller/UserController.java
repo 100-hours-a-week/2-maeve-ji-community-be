@@ -2,7 +2,9 @@ package com.example.ktb.controller;
 
 import com.example.ktb.dto.response.ApiResponse;
 import com.example.ktb.dto.UserDto;
+import com.example.ktb.dto.response.GetUserProfileResponseDto;
 import com.example.ktb.dto.response.LoginResponseDto;
+import com.example.ktb.service.AuthService;
 import com.example.ktb.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final AuthService authService;
 
     // 회원가입
     @PostMapping("/users")
@@ -36,14 +39,18 @@ public class UserController {
 
     // 로그아웃
     @DeleteMapping("/auth/sessions")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        authService.logout(token);
 
-        return ResponseEntity.noContent().build();
+        Map<String, String> data = Map.of("redirectURL", "/auth/login");
+        return ResponseEntity.ok(new ApiResponse("user_logout_success", data));
     }
 
     // 회원 조회
     @GetMapping("/users/{userId}")
     public ResponseEntity<?> getUserProfile(@PathVariable Long userId) {
+//        GetUserProfileResponseDto responseDto = new GetUserProfileResponseDto(userId, email, nickname, em)
         return ResponseEntity.ok(new ApiResponse("user_profile_success", userService.getUserProfile(userId)));
     }
 
