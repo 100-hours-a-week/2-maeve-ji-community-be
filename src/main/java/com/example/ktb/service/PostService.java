@@ -1,8 +1,10 @@
 package com.example.ktb.service;
 
 import com.example.ktb.dto.PostDto;
+import com.example.ktb.entity.Comment;
 import com.example.ktb.entity.Post;
 import com.example.ktb.entity.User;
+import com.example.ktb.repository.CommentRepository;
 import com.example.ktb.repository.PostRepository;
 import com.example.ktb.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -11,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -23,6 +22,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     // 게시물 전체 조회
     @Transactional
@@ -80,17 +80,39 @@ public class PostService {
     // 게시물 단일 조회
     @Transactional
     public Map<String, Object> getPostDetail(Long postId) {
+        // 조회수 증가
+        postRepository.increasePostView(postId);
+
         Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new IllegalArgumentException("post_not_found"));
-
-        // author 정보 구성
+        // 글 작성자 정보
         Map<String, Object> author = Map.of(
                 "user_id", post.getUser().getUserId(),
                 "nickname", post.getUser().getNickname(),
                 "img_url", post.getUser().getImgUrl()
         );
 
-        // 댓글은 지금 생략 (필요하면 CommentRepository 추가해줄게)
+        // 댓글 조회 및 구성
+        List<Comment> comments = commentRepository.findByPostPostIdAndIsDeletedFalse(postId);
+        List<Map<String, Object>> commentList = new ArrayList<>();
+
+        for (Comment comment : comments) {
+            Map<String, Object> commentAuthor = Map.of(
+                    "user_id", comment.getUser().getUserId(),
+                    "nickname", comment.getUser().getNickname(),
+                    "img_url", comment.getUser().getImgUrl()
+            );
+
+            Map<String, Object> commentData = new LinkedHashMap<>();
+            commentData.put("id", comment.getCommentId());
+            commentData.put("comment", comment.getComment());
+            commentData.put("author", commentAuthor);
+            commentData.put("created_at", comment.getCreatedAt());
+            commentData.put("modified_at", comment.getModifiedAt());
+            commentData.put("is_deleted", comment.getIsDeleted());
+
+            commentList.add(commentData);
+        }
 
         // 응답 데이터 구성
         Map<String, Object> postData = new LinkedHashMap<>();
@@ -100,14 +122,14 @@ public class PostService {
         postData.put("author", author);
         postData.put("countRecommend", post.getPostLike());
         postData.put("countComment", post.getPostComment());
-        postData.put("countView", post.getPostView());
+        postData.put("countView", post.getPostView()+1);
         postData.put("img_url", post.getImgUrl());
         postData.put("created_at", post.getCreatedAt());
         postData.put("modified_at", post.getModifiedAt());
         postData.put("is_deleted", post.getIsDeleted());
 
         // 지금은 comments 생략
-        postData.put("comments", new ArrayList<>());
+        postData.put("comments", commentList);
 
         return postData;
     }

@@ -2,6 +2,7 @@ package com.example.ktb.controller;
 
 import com.example.ktb.dto.PostDto;
 import com.example.ktb.dto.response.ApiResponse;
+import com.example.ktb.repository.PostRepository;
 import com.example.ktb.service.PostService;
 import com.example.ktb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class PostController {
     private final PostService postService;
     private final UserService userService;
+    private final PostRepository postRepository;
 
     // 게시물 전체 조회
     @GetMapping("/posts")

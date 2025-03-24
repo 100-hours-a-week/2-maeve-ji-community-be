@@ -92,7 +92,52 @@ public class CommentService {
         comment.setModifiedAt(LocalDateTime.now());
     }
 
-    // 댓글 삭제
+    // 댓글 삭제 (soft deleted)
+    @Transactional
+    public void deleteComment(Long postId, Long commentId, Long userId) {
+        Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("comment_not_found"));
+
+        if (!postId.equals(comment.getPost().getPostId())) {
+            throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
+        }
+
+        comment.setIsDeleted(true);
+        comment.setModifiedAt(LocalDateTime.now());
+    }
+
+    // 댓글 목록 조회
+    // 댓글 목록 조회
+    @Transactional
+    public List<Map<String, Object>> getCommentsByPost(Long postId) {
+        // 게시글 존재 확인
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("post_not_found"));
+
+        // 댓글 조회
+        List<Comment> comments = commentRepository.findByPostPostIdAndIsDeletedFalse(postId);
+        List<Map<String, Object>> commentList = new ArrayList<>();
+
+        for (Comment comment : comments) {
+            Map<String, Object> author = Map.of(
+                    "user_id", comment.getUser().getUserId(),
+                    "nickname", comment.getUser().getNickname(),
+                    "img_url", comment.getUser().getImgUrl()
+            );
+
+            Map<String, Object> commentData = new LinkedHashMap<>();
+            commentData.put("id", comment.getCommentId());
+            commentData.put("comment", comment.getComment());
+            commentData.put("author", author);
+            commentData.put("created_at", comment.getCreatedAt());
+            commentData.put("modified_at", comment.getModifiedAt());
+            commentData.put("is_deleted", comment.getIsDeleted());
+
+            commentList.add(commentData);
+        }
+
+        return commentList;
+    }
 
 
 

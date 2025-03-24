@@ -1,6 +1,7 @@
 package com.example.ktb.controller;
 
 import com.example.ktb.dto.CommentDto;
+import com.example.ktb.dto.response.ApiResponse;
 import com.example.ktb.entity.Comment;
 import com.example.ktb.service.CommentService;
 import com.example.ktb.service.PostService;
@@ -24,8 +25,6 @@ public class CommentController {
     private final PostService postService;
     private final UserService userService;
     private final CommentService commentService;
-
-    // 댓글 목록 조회
 
     // 댓글 등록
     @PostMapping("/posts/{postId}/comments")
@@ -81,7 +80,53 @@ public class CommentController {
     }
 
     // 댓글 삭제
+    @DeleteMapping("/posts/{postId}/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long postId,
+                                           @PathVariable Long commentId,
+                                           HttpServletRequest request) {
+        try {
+            Long userId = Long.parseLong((String) request.getAttribute("userId"));
 
+            log.info(">> Controller: userId={}", userId);
+            log.info(">> Controller: commentId={}", commentId);
+            log.info(">> Controller: postId={}", postId);
 
+            commentService.deleteComment(postId, commentId, userId);
+//            return ResponseEntity.ok(Map.of(
+//                    "message", "comment_delete_success",
+//                    "data", Map.of("redirectURL", "/posts/" + postId)
+//            ));
+            return ResponseEntity.ok(new ApiResponse("comment_delete_success", Map.of("redirectURL", "/posts/" + postId)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "comment_not_found", "data", null));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "comment_forbidden", "data", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "comment_bad_request", "data", null));
+        }
+    }
+
+    // 댓글 목록 조회
+    @GetMapping("/posts/{postId}/comments")
+    public ResponseEntity<?> getComments(@PathVariable Long postId) {
+        try {
+            List<Map<String, Object>> comments = commentService.getCommentsByPost(postId);
+//            return ResponseEntity.ok(Map.of(
+//                    "message", "comment_get_success",
+//                    "data", Map.of("comments", comments)
+//            ));
+
+            return ResponseEntity.ok(new ApiResponse("comment_get_success", comments));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "comment_not_found", "data", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "comment_bad_request", "data", null));
+        }
+    }
 
 }
