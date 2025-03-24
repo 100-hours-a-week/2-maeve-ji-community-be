@@ -14,7 +14,7 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -54,18 +54,46 @@ public class CommentService {
                 .user(user)
                 .comment(commentDto.getComment())
                 .createdAt(LocalDateTime.now())
-                .modifiedAt(LocalDateTime.now())
+//                .modifiedAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
 
         // 저장
         Comment savedComment = commentRepository.save(comment);
 
-        // 저장 후 ID 반환 (절대 null이면 안됨)
+        // 저장 후 ID 반환
         if (savedComment.getCommentId() == null) {
             throw new IllegalStateException("댓글 저장 실패");
         }
 
         return savedComment.getCommentId();
     }
+
+    // 댓글 수정
+    @Transactional
+    public void updateComment(Long postId, Long commentId, Long userId, String content) {
+        log.info(">> Service: postId={}", postId);
+        log.info(">> Service: userId={}", userId);
+        log.info(">> Service: commentId={}", commentId);
+        log.info(">> Service: content={}", content);
+
+        if (content == null) {
+            throw new IllegalArgumentException("댓글 수정:: comment 누락");
+        }
+
+        Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("comment_not_found"));
+
+        if (!comment.getUser().getUserId().equals(userId)) {
+            throw new SecurityException("작성자만 수정할 수 있습니다");
+        }
+
+        comment.setComment(content);
+        comment.setModifiedAt(LocalDateTime.now());
+    }
+
+    // 댓글 삭제
+
+
+
 }

@@ -56,4 +56,12 @@ public class Post {
         this.postComment += 1;
     }
 
+    // 댓글 개수 삭제
+    public void decreaseCommentCount() {
+        this.postComment += 1;
+        if (this.postComment < 0) {
+            this.postComment = 0;
+        }
+    }
+
 }

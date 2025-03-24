@@ -15,6 +15,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // 게시글에 맞는 댓글 가져오기 (삭제되지 않은)
     Optional<List<Comment>> findByPostAndIsDeletedFalse(Post post);
+
+    // 삭제되지 않은 댓글 가져오기
+    Optional<Comment> findByCommentIdAndIsDeletedFalse(Long commentId);
 }
 
 
