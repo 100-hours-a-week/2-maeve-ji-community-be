@@ -51,4 +51,9 @@ public class Post {
 
     @Column(name = "post_comment")
     private int postComment = 0;
+
+    public void increaseCommentCount() {
+        this.postComment += 1;
+    }
+
 }

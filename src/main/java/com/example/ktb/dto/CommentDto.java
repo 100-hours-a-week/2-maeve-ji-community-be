@@ -15,7 +15,7 @@ public class CommentDto {
     private Long commentId;
     private Long postId;
     private Long userId;
-    private String content;
+    private String comment;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private Boolean isDeleted;
@@ -26,7 +26,7 @@ public class CommentDto {
                 .commentId(commentDto.getCommentId())
                 .postId(commentDto.getPostId())
                 .userId(commentDto.getUserId())
-                .content(commentDto.getContent())
+                .comment(commentDto.getComment())
                 .createdAt(commentDto.getCreatedAt())
                 .modifiedAt(commentDto.getModifiedAt())
                 .isDeleted(commentDto.getIsDeleted())

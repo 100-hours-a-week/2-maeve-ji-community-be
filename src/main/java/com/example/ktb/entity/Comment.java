@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "Comments")
-@Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)  // 외부에서 막 생성하지 못하게
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Comment {
     @Id
     @Column(name = "comment_id")
