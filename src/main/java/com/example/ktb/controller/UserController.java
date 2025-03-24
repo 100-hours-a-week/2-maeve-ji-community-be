@@ -56,7 +56,6 @@ public class UserController {
     // 회원 조회
     @GetMapping("/users/{userId}")
     public ResponseEntity<?> getUserProfile(@PathVariable Long userId) {
-//        GetUserProfileResponseDto responseDto = new GetUserProfileResponseDto(userId, email, nickname, em)
         return ResponseEntity.ok(new ApiResponse("user_profile_success", userService.getUserProfile(userId)));
     }
 
@@ -91,11 +90,10 @@ public class UserController {
             userService.updatePassword(userId, userDto.getPassword());
             return ResponseEntity.noContent().build(); // 204 성공
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(404)
-                    .body(Map.of("message", "user_not_found", "data", null));
+            return ResponseEntity.status(404).body(new ApiResponse("user_not_found", null));
+
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("message", "internal_server_error", "data", null));
+            return ResponseEntity.status(500).body(new ApiResponse("internal_server_error", null));
         }
     }
 

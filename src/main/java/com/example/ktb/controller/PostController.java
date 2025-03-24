@@ -26,10 +26,7 @@ public class PostController {
     public ResponseEntity<?> getAllPosts(HttpServletRequest request) {
         try {
             List<Map<String, Object>> posts = postService.getAllPosts();
-            return ResponseEntity.ok(Map.of(
-                    "message", "posts_all_get_success",
-                    "data", Map.of("posts", posts)
-            ));
+            return ResponseEntity.ok(new ApiResponse("posts_all_get_success", Map.of("posts", posts)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "post_bad_request", "data", null));
@@ -43,8 +40,8 @@ public class PostController {
         try {
             Long userId = Long.parseLong((String) request.getAttribute("userId")); // JWT에서 추출
             Long postId = postService.createPost(postDto, userId);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "post_create_success", "data", Map.of("post_id", postId)));
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("post_create_success", Map.of("postId", postId)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "post_bad_request", "data", null));
@@ -59,10 +56,12 @@ public class PostController {
     public ResponseEntity<?> getPost(@PathVariable Long postId) {
         try {
             Map<String, Object> postData = postService.getPostDetail(postId);
-            return ResponseEntity.ok(Map.of(
-                    "message", "post_get_success",
-                    "data", postData
-            ));
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("post_get_success", Map.of("data", postData)));
+//            return ResponseEntity.ok(Map.of(
+//                    "message", "post_get_success",
+//                    "data", postData
+//            ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "post_not_found", "data", null));
@@ -105,10 +104,7 @@ public class PostController {
             Long userId = Long.parseLong((String) request.getAttribute("userId"));
             postService.deletePost(postId, userId);
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "post_delete_success",
-                    "data", Map.of("redirectURL", "/posts")
-            ));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("post_delete_success", Map.of("redirectURL", "/posts")));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "post_not_found", "data", null));

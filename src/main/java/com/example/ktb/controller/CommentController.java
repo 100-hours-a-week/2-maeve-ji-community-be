@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,18 +39,14 @@ public class CommentController {
             log.info(">> Controller: userId={}", userId);
             log.info(">> Controller: postId={}", postId);
             Long commentId = commentService.createComment(commentDto, postId, userId);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("message", "comment_success", "data", Map.of("comment_id", commentId)));
 
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("like_success", Map.of("comment_id", commentId)));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "comment_not_found", "data", null));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "comment_forbidden", "data", null));
+            return ResponseEntity.status(404).body(new ApiResponse("comment_not_found", null));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(new ApiResponse("comment_forbidden", null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "comment_bad_request", "data", null));
+            return ResponseEntity.status(400).body(new ApiResponse("comment_bad_request", null));
         }
     }
 
@@ -68,14 +66,11 @@ public class CommentController {
             commentService.updateComment(postId, commentId, userId, content);
             return ResponseEntity.noContent().build();  // 204 no content 성공
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "comment_not_found", "data", null));
+            return ResponseEntity.status(404).body(new ApiResponse("comment_not_found", null));
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "comment_forbidden", "data", null));
+            return ResponseEntity.status(403).body(new ApiResponse("comment_forbidden", null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "comment_bad_request", "data", null));
+            return ResponseEntity.status(400).body(new ApiResponse("comment_bad_request", null));
         }
     }
 
@@ -92,20 +87,14 @@ public class CommentController {
             log.info(">> Controller: postId={}", postId);
 
             commentService.deleteComment(postId, commentId, userId);
-//            return ResponseEntity.ok(Map.of(
-//                    "message", "comment_delete_success",
-//                    "data", Map.of("redirectURL", "/posts/" + postId)
-//            ));
+
             return ResponseEntity.ok(new ApiResponse("comment_delete_success", Map.of("redirectURL", "/posts/" + postId)));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "comment_not_found", "data", null));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "comment_forbidden", "data", null));
+            return ResponseEntity.status(404).body(new ApiResponse("comment_not_found", null));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(new ApiResponse("comment_forbidden", null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "comment_bad_request", "data", null));
+            return ResponseEntity.status(400).body(new ApiResponse("comment_bad_request", null));
         }
     }
 
@@ -114,19 +103,13 @@ public class CommentController {
     public ResponseEntity<?> getComments(@PathVariable Long postId) {
         try {
             List<Map<String, Object>> comments = commentService.getCommentsByPost(postId);
-//            return ResponseEntity.ok(Map.of(
-//                    "message", "comment_get_success",
-//                    "data", Map.of("comments", comments)
-//            ));
 
             return ResponseEntity.ok(new ApiResponse("comment_get_success", comments));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "comment_not_found", "data", null));
+            return ResponseEntity.status(404).body(new ApiResponse("comment_not_found", null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "comment_bad_request", "data", null));
-        }
+        return ResponseEntity.status(400).body(new ApiResponse("comment_not_found", null));
     }
 
+    }
 }

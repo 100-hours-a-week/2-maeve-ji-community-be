@@ -1,4 +1,5 @@
 package com.example.ktb.controller;
+import com.example.ktb.dto.response.ApiResponse;
 import com.example.ktb.service.LikeService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,8 @@ public class LikeController {
         Long userId = Long.parseLong((String) request.getAttribute("userId"));
         likeService.likePost(userId, postId);
         log.info("User {} liked post {}", userId, postId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "like_success", "data", Map.of("postId", postId)));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("like_success", Map.of("postId", postId)));
     }
 
     // 좋아요 취소
@@ -33,6 +34,7 @@ public class LikeController {
         Long userId = Long.parseLong((String) request.getAttribute("userId"));
         likeService.unlikePost(userId, postId);
         log.info("User {} unliked post {}", userId, postId);
+
         return ResponseEntity.noContent().build();
     }
 }
