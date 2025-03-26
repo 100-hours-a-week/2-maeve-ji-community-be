@@ -35,6 +35,7 @@ public class WebSecurityConfig {
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers("/auth/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/images/**").permitAll()  // 이미지 경로 추가
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -7,6 +7,7 @@ import com.example.ktb.service.PostService;
 import com.example.ktb.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,7 +58,7 @@ public class PostController {
       HttpServletRequest request) {
 
     try {
-      Long userId = (Long) request.getAttribute("userId"); // 아예 Long으로 받음
+      Long userId = (Long) request.getAttribute("userId");  // Long으로 바로 받음
       if (userId == null) {
         log.info("userId is null");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -69,7 +70,11 @@ public class PostController {
       log.info("userId: {}", userId);
       log.info("image: {}", image);
 
-      String imageUrl = null;
+      PostDto postDto = new PostDto();
+      postDto.setTitle(title);
+      postDto.setContent(content);
+
+      // 이미지가 있다면 저장 처리
       if (image != null && !image.isEmpty()) {
         String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
         String uploadDir = System.getProperty("user.dir") + "/uploads/";
@@ -77,25 +82,29 @@ public class PostController {
         if (!dir.exists()) {
           dir.mkdirs();
         }
-        image.transferTo(new File(uploadDir + fileName));
-        imageUrl = "http://localhost:8080/images/" + fileName;
-      }
 
-      PostDto postDto = new PostDto();
-      postDto.setTitle(title);
-      postDto.setContent(content);
-      postDto.setImgUrl(imageUrl);
+        File saveFile = new File(uploadDir + fileName);
+        try {
+          image.transferTo(saveFile);
+          String imageUrl = "http://localhost:8080/images/" + fileName;
+          postDto.setImgUrl(imageUrl);
+        } catch (IOException e) {
+          log.error("이미지 저장 실패", e);
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+              .body(Map.of("message", "image_save_failed", "data", null));
+        }
+      }
 
       Long postId = postService.createPost(postDto, userId);
       return ResponseEntity.status(HttpStatus.CREATED)
           .body(new ApiResponse("post_create_success", Map.of("postId", postId)));
+
     } catch (Exception e) {
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(Map.of("message", "post_bad_request", "data", null));
     }
   }
-
 
   // 게시물 조회
   @GetMapping("/posts/{postId}")
@@ -105,10 +114,6 @@ public class PostController {
 
       return ResponseEntity.status(HttpStatus.CREATED)
           .body(new ApiResponse("post_get_success", Map.of("data", postData)));
-//            return ResponseEntity.ok(Map.of(
-//                    "message", "post_get_success",
-//                    "data", postData
-//            ));
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(Map.of("message", "post_not_found", "data", null));
@@ -164,42 +169,4 @@ public class PostController {
           .body(Map.of("message", "post_bad_request", "data", null));
     }
   }
-//
-//    // 게시물 좋아요
-//    @PostMapping("/posts/{postId}/likes")
-//    public ResponseEntity<?> likePost(@PathVariable Long postId, HttpServletRequest request) {
-//        try {
-//            Long userId = Long.parseLong((String) request.getAttribute("userId"));  // JWT에서 추출
-//            postService.likePost(postId, userId);
-//            return ResponseEntity.status(HttpStatus.CREATED)
-//                    .body(Map.of("message", "like_success", "data", Map.of("postId", postId)));
-//        } catch (IllegalArgumentException e) {
-//            String message = e.getMessage().equals("삭제된 게시글입니다.") ? "deleted_post" : "post_not_found";
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(Map.of("message", "post_not_found", "data", null));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(Map.of("message", "like_bad_request", "data", null));
-//        }
-//    }
-//
-//
-//    // 게시물 좋아요 삭제
-//    @DeleteMapping("/posts/{postId}/likes")
-//    public ResponseEntity<?> unlikePost(@PathVariable Long postId, HttpServletRequest request) {
-//        try {
-//            // 보통 JWT에서 userId 추출해서 좋아요 누른 사람인지 검증도 가능
-//            Long userId = Long.parseLong((String) request.getAttribute("userId")); // JWT에서 추출
-//            postService.unlikePost(postId, userId);
-//            return ResponseEntity.noContent().build(); // 204 성공
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(Map.of("message", "like_not_found", "data", null));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(Map.of("message", "like_bad_request", "data", null));
-//        }
-//    }
-//
-
 }
