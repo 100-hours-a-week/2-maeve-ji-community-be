@@ -14,10 +14,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,14 +31,36 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/users")
-    public ResponseEntity<?> register(@RequestBody UserDto userDto) {
-        System.out.println("Img url " + userDto.getImgUrl()) ;
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<?> register(
+            @RequestPart("userDto") UserDto userDto,
+            @RequestPart(value = "profileImage") MultipartFile profileImage) {
+
+        // 이미지 저장 처리
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String fileName = UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            String savePath = uploadDir + fileName;
+            try {
+                File dir = new File(uploadDir);
+                if (!dir.exists()) dir.mkdirs();  // 폴더 생성
+                profileImage.transferTo(new File(savePath));
+                String imageUrl = "http://localhost:8080/images/" + fileName;
+                userDto.setImgUrl(imageUrl); // 이미지 URL userDto에 주입
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ResponseEntity.status(500).body("이미지 저장 실패");
+            }
+        }
+
+        // DB 저장 처리
         UserDto savedUser = userService.register(userDto);
         return ResponseEntity.status(201).body(new ApiResponse("user_signin_success", savedUser));
     }
 
     // 로그인
     @PostMapping("/auth/sessions")
+    @CrossOrigin(origins = "*")
     public ResponseEntity<?> login(@RequestBody UserDto userDto) {
         String token = userService.login(userDto.getEmail(), userDto.getPassword());
         Long userId = userService.getUserIdByEmail(userDto.getEmail());
