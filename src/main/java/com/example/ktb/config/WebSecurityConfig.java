@@ -34,6 +34,7 @@ public class WebSecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers("/auth/**").permitAll()
+            .requestMatchers("/users/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/images/**").permitAll()  // 이미지 경로 추가
             .anyRequest().authenticated()
