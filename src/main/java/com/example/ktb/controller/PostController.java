@@ -14,6 +14,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -108,9 +109,12 @@ public class PostController {
 
   // 게시물 조회
   @GetMapping("/posts/{postId}")
-  public ResponseEntity<?> getPost(@PathVariable Long postId) {
+  public ResponseEntity<?> getPost(
+      @PathVariable Long postId,
+      @RequestParam(value = "count", defaultValue = "true") boolean count
+  ) {
     try {
-      Map<String, Object> postData = postService.getPostDetail(postId);
+      Map<String, Object> postData = postService.getPostDetail(postId, count);
 
       return ResponseEntity.status(HttpStatus.CREATED)
           .body(new ApiResponse("post_get_success", Map.of("data", postData)));
@@ -124,39 +128,84 @@ public class PostController {
   }
 
   // 게시글 수정
-  @PutMapping("/posts/{postId}")
-  public ResponseEntity<?> updatePost(@PathVariable Long postId,
-      @RequestBody Map<String, String> updateRequest,
+  @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<?> updatePost(
+      @PathVariable Long postId,
+      @RequestPart("title") String title,
+      @RequestPart("content") String content,
+      @RequestPart(value = "image", required = false) MultipartFile image,
       HttpServletRequest request) {
-    try {
-      Long userId = Long.parseLong((String) request.getAttribute("userId")); // JWT에서 추출
-      String title = updateRequest.get("title");
-      String content = updateRequest.get("content");
-      String imgUrl = updateRequest.get("img_url");
 
-      postService.updatePost(postId, userId, title, content, imgUrl);
+    try {
+      Long userId = (Long) request.getAttribute("userId");
+      String imageUrl = null;
+
+      // ✅ 이미지 저장 처리
+      if (image != null && !image.isEmpty()) {
+        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        String savePath = uploadDir + fileName;
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+          dir.mkdirs();  // 폴더 생성
+        }
+        image.transferTo(new File(savePath));
+        imageUrl = "http://localhost:8080/images/" + fileName;
+      }
+
+      // ✅ imageUrl을 포함해 Service로 넘기기
+      postService.updatePost(postId, userId, title, content, imageUrl);
       return ResponseEntity.noContent().build(); // 204 성공
+
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(Map.of("message", "post_not_found", "data", null));
     } catch (SecurityException e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(Map.of("message", "post_forbidden", "data", null));
+    } catch (IOException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "image_upload_failed", "data", null));
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(Map.of("message", "post_bad_request", "data", null));
     }
   }
 
+//  @PutMapping("/posts/{postId}")
+//  public ResponseEntity<?> updatePost(@PathVariable Long postId,
+//      @RequestBody Map<String, String> updateRequest,
+//      HttpServletRequest request) {
+//    try {
+//      Long userId = (Long) request.getAttribute("userId"); // JWT에서 추출
+//
+//      String title = updateRequest.get("title");
+//      String content = updateRequest.get("content");
+//      String imgUrl = updateRequest.get("img_url");
+//
+//      postService.updatePost(postId, userId, title, content, imgUrl);
+//      return ResponseEntity.noContent().build(); // 204 성공
+//    } catch (IllegalArgumentException e) {
+//      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//          .body(Map.of("message", "post_not_found", "data", null));
+//    } catch (SecurityException e) {
+//      return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//          .body(Map.of("message", "post_forbidden", "data", null));
+//    } catch (Exception e) {
+//      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//          .body(Map.of("message", "post_bad_request", "data", null));
+//    }
+//  }
+
   // 게시글 삭제
   @DeleteMapping("/posts/{postId}")
   public ResponseEntity<?> deletePost(@PathVariable Long postId,
       HttpServletRequest request) {
     try {
-      Long userId = Long.parseLong((String) request.getAttribute("userId"));
+      Long userId = (Long) request.getAttribute("userId");
       postService.deletePost(postId, userId);
 
-      return ResponseEntity.status(HttpStatus.CREATED)
+      return ResponseEntity.status(HttpStatus.NO_CONTENT)
           .body(new ApiResponse("post_delete_success", Map.of("redirectURL", "/posts")));
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)

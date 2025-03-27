@@ -47,7 +47,7 @@ public class WebSecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOriginPatterns(List.of("http://localhost:5500", "http://127.0.0.1:5500"));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(List.of("*", "Authorization", "Content-Type"));
     config.setAllowCredentials(true); // JWT 토큰 헤더 전달 허용
 
