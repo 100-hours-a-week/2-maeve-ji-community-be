@@ -149,8 +149,8 @@ public class UserController {
     // JWT에서 인증된 userId 꺼내기
     Long authenticatedUserId = (Long) request.getAttribute("userId");
 
-    System.out.println("🔐 authenticatedUserId: " + authenticatedUserId);
-    System.out.println("📥 requested userId: " + userId);
+    System.out.println("authenticatedUserId: " + authenticatedUserId);
+    System.out.println("requested userId: " + userId);
 
     // 본인 맞는지 확인
     if (!authenticatedUserId.equals(userId)) {
